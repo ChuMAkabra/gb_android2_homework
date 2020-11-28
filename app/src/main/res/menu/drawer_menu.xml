@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+    <group android:checkableBehavior="all">
+        <item
+            android:id="@+id/home"
+            android:title="@string/home"
+            android:icon="@android:drawable/ic_dialog_map"/>
+
+        <item
+            android:id="@+id/tools"
+            android:title="@string/tools"
+            android:icon="@android:drawable/ic_menu_preferences"/>
+    </group>
+
+    <item android:title="@string/communicate">
+        <menu>
+            <item
+                android:id="@+id/contact"
+                android:title="@string/contact"
+                android:icon="@android:drawable/sym_action_email"/>
+
+            <item
+                android:id="@+id/About"
+                android:title="@string/about"
+                android:icon="@android:drawable/ic_menu_info_details"/>
+        </menu>
+    </item>
+</menu>

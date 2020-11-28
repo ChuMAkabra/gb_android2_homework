@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppMain" parent="Theme.MaterialComponents">
+        <item name="windowNoTitle">false</item> <!-- removes toolbar even with windowActionBar = true! -->
+        <item name="windowActionBar">true</item>
+    </style>
+</resources>

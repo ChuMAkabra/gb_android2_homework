@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DzChumanov05">
 
-        <activity android:name=".ActivityMain">
+        <activity android:name=".ActivityMain" android:theme="@style/AppMain">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
