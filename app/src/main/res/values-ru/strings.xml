@@ -6,4 +6,8 @@
     <string name="contact">Написать</string>
     <string name="about">О приложении</string>
     <string name="search">Поиск</string>
+    <string name="app_logo">Логотип приложения</string>
+    <string name="navigation_drawer_open">Открыть боковое меню</string>
+    <string name="navigation_drawer_close">Закрыть боковое меню</string>
+
 </resources>

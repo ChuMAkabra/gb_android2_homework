@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
         android:id="@+id/search"
         android:title="@string/search"
         android:icon="@android:drawable/ic_menu_search"
         app:showAsAction="always"
         app:actionViewClass="android.widget.SearchView" />
+<!--    actionViewClass меняет иконку поиска (ее цвет меняется в зависимости от темы,
+        как и у "сэндвича" и Options View. Поэтому лучше скрыть другие иконки в Options View) -->
     <item
         android:id="@+id/tools"
         android:title="@string/tools"
         android:icon="@android:drawable/ic_menu_preferences"
-        app:showAsAction="always"/>
+        app:showAsAction="never"/>
     <item
         android:id="@+id/About"
         android:title="@string/about"
         android:icon="@android:drawable/ic_menu_info_details"
-        app:showAsAction="always"/>
+        app:showAsAction="never"/>
 </menu>
