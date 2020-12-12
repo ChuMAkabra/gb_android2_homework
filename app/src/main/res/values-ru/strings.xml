@@ -10,4 +10,12 @@
     <string name="navigation_drawer_open">Открыть боковое меню</string>
     <string name="navigation_drawer_close">Закрыть боковое меню</string>
 
+    <string name="details">Подробнее</string>
+    <string name="city_image">Фото города</string>
+    <string name="weather_icon">Иконка погоды</string>
+    <string name="version">версия 0.1.1</string>
+    <string name="website_text">Сайт разработчика:</string>
+
+    <string name="app_icon_desc">Иконка приложения</string>
+    <string name="dark_theme">Темная тема</string>
 </resources>

@@ -3,6 +3,7 @@ package com.example.dzchumanov05;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +22,17 @@ public class ActivityMain extends AppCompatActivity {
         Toolbar toolbar = initToolbar();
         // создаем кнопку-"сэндвич", открывающую боковую панель (навигационное меню)
         initDrawerToggle(toolbar);
+
+        //TODO: при первом запуске по геолокации определить город.
+        // Если нет доступа, вывести последний город из истории.
+        // Если история пуста - предложить пользователю воспользоваться поиском
+        // Возможно вывести инструкцию во всплывающем окне
+
+        // пока что просто добавим пустой основной фрагмент
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_main, new FragmentMain(), null)
+                .commit();
     }
 
     private Toolbar initToolbar() {
@@ -50,5 +62,31 @@ public class ActivityMain extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // TODO: добавлять в стек только главную страницу
+        switch (item.getItemId()) {
+            // TODO: реализовать поиск
+//            case R.id.search:
+//                Toast.makeText(this,"Search", Toast.LENGTH_SHORT).show();
+//                return true;
+            case R.id.about:
+                getSupportFragmentManager()
+                        .beginTransaction()
+//                        .addToBackStack(null)
+                        .replace(R.id.fragment_main, new FragmentAbout(), null)
+                        .commit();
+                return true;
+            case R.id.tools:
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_main, new FragmentTools(), null)
+                        .commit();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

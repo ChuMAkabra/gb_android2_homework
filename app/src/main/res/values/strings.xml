@@ -9,4 +9,13 @@
     <string name="app_logo">App logo</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="weathapp" translatable="false">WeathApp</string>
+    <string name="details">Details</string>
+    <string name="city_image">City photo</string>
+    <string name="weather_icon">Weather icon</string>
+    <string name="version">version 0.1.1</string>
+    <string name="website_text">Developer\'s website:</string>
+    <string name="website" translatable="false"><u>http://d91511ib.beget.tech</u></string>
+    <string name="app_icon_desc">App icon</string>
+    <string name="dark_theme">Dark Theme</string>
 </resources>
