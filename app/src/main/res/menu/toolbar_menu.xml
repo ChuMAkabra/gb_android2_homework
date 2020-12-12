@@ -16,7 +16,7 @@
         android:icon="@android:drawable/ic_menu_preferences"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/About"
+        android:id="@+id/about"
         android:title="@string/about"
         android:icon="@android:drawable/ic_menu_info_details"
         app:showAsAction="never"/>

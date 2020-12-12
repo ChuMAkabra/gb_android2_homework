@@ -2,7 +2,9 @@ package com.example.dzchumanov05;
 
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,13 +30,13 @@ public class ActivityMain extends AppCompatActivity {
     }
 
     private void initDrawerToggle(Toolbar toolbar) {
-        DrawerLayout drawer = findViewById(R.id.drawer_container);
+        // не отображаем название активити в тулбаре
         try {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }catch (NullPointerException e) {
             e.printStackTrace();
         }
-
+        DrawerLayout drawer = findViewById(R.id.drawer_container);
         // создаем слушатель, который будет обрабатывать открытие и закрытие навигационного меню
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
