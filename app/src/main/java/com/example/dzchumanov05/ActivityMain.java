@@ -3,8 +3,10 @@ package com.example.dzchumanov05;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,13 +17,28 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.example.dzchumanov05.model.WeatherRequest;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.stream.Collectors;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class ActivityMain extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawer;
     private NavigationView navView;
     private Toolbar toolbar;
+
+    private final String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
+    private final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,7 +104,8 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                Snackbar.make(searchView, query, Snackbar.LENGTH_LONG).show();
+//                Snackbar.make(searchView, query, Snackbar.LENGTH_LONG).show();
+                requestWeatherInfo(query);
                 return true;
             }
 
@@ -97,6 +115,48 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
             }
         });
         return true;
+    }
+
+    private void requestWeatherInfo(String query) {
+        new Thread(() -> {
+            HttpsURLConnection urlConnection = null;
+            String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, query, BuildConfig.WEATHER_API_KEY);
+            try {
+                URL url = new URL(apiCall);
+                // 1) Открываем соединение
+                urlConnection = (HttpsURLConnection) url.openConnection();
+                // 2) Подготоваливаем запрос
+                // устанавливаем метод протокола - GET (получение данных)
+                urlConnection.setRequestMethod("GET");
+                // устанавливаем таймаут (ожидание не больше 10 сек)
+                urlConnection.setReadTimeout(10000);
+                // 3) Читаем данные в поток
+                BufferedReader inReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                // сохраняем все данные в виде строки
+                String strData = getLines(inReader);
+                // преобразуем данные запроса в модель посредством библиотеки Gson
+                Gson gson = new Gson();
+                WeatherRequest weatherRequest = gson.fromJson(strData, WeatherRequest.class);
+                handler.post(() -> {
+                    Toast.makeText(this.getBaseContext(), String.valueOf(weatherRequest.getMain().getTemp()), Toast.LENGTH_LONG).show();
+                });
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+            }
+        }).start();
+
+    }
+
+    private String getLines(BufferedReader in) {
+        // TODO: подробно изучить эту строку
+        return in.lines().collect(Collectors.joining("\n"));
     }
 
     @Override
