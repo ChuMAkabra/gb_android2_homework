@@ -90,8 +90,8 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
                         .beginTransaction()
                         .replace(R.id.fragment_main, FragmentMain.create(query), null)
                         .commit();
-
-                return true;
+                // TODO: спрятать Search ActionView? Или пусть пользователь и дальше вводит?
+                return false;
             }
 
             @Override

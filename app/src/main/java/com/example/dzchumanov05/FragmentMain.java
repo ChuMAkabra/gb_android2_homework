@@ -67,12 +67,38 @@ public class FragmentMain extends AbstractFragment {
 
     public static FragmentMain create(String cityName){
         FragmentMain fragment = new FragmentMain();
-        // записать данные в качестве аргументов фрагмента
+        // правим вводимое название города (удаляем лишние пробелы, заменяем
+        // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
+        String cityNameRes = prepareCityName(cityName);
+        // записываем данные в качестве аргументов фрагмента
         Bundle args = new Bundle();
-        args.putString(CITY, cityName);
+        args.putString(CITY, cityNameRes);
         fragment.setArguments(args);
 
         return fragment;
+    }
+
+    private static String prepareCityName(String cityName) {
+        // разделим название города на части (если > 2 слов), удалив лишние пробелы
+        String[] parts = cityName
+                .replaceAll("\\s{2,}", " ")
+                .trim()
+                .split("[\\s|-]");
+
+        // начнем название города с первого слова (с заглавной буквы)
+        String cityNameRes = capitalize(parts[0]);
+        // добавим через пробел другие части с большой буквы (если > 2 слов)
+        if (parts.length > 1) {
+            for (int i = 1; i < parts.length; i++) {
+                parts[i] = capitalize(parts[i]);
+                cityNameRes = String.format("%s %s", cityNameRes, parts[i]);
+            }
+        }
+        return cityNameRes;
+    }
+
+    private static String capitalize(String word) {
+        return String.format("%s%s", word.substring(0, 1).toUpperCase(), word.substring(1).toLowerCase());
     }
 
     private String getCity() {
@@ -108,7 +134,7 @@ public class FragmentMain extends AbstractFragment {
             // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
             String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, curCity, BuildConfig.WEATHER_API_KEY);
             final WeatherRequest weatherRequest = (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
-            // TODO: возможно добавить здесь проверку на weatherRequest != null
+            // TODO: возможно добавить здесь проверку на weatherRequest != null (возможно вывести диалоговое окно, что такого города не существует)
             float lat = weatherRequest.getCoord().getLat();
             float lon = weatherRequest.getCoord().getLon();
             curTemp = floatTempToString(weatherRequest.getMain().getTemp());
@@ -119,7 +145,7 @@ public class FragmentMain extends AbstractFragment {
             String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s",
                     WEATHER_URL_DOMAIN, Float.toString(lat), Float.toString(lon), BuildConfig.WEATHER_API_KEY);
             WeatherOneCall weatherOneCall = (WeatherOneCall) getObjectFromGson(apiCall2, WeatherOneCall.class);
-            // TODO: возможно добавить здесь проверку на weatherOneCall != null
+            // TODO: возможно добавить здесь проверку на weatherOneCall != null (возможно вывести диалоговое окно, что данные по городу не найдены - хотя это странно)
             hourly = weatherOneCall.getHourly();
             timezoneOffset = weatherOneCall.getTimezone_offset();
             images = new ArrayList<>();
