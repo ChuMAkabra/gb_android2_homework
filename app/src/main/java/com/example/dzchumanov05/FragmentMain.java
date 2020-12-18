@@ -4,19 +4,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.dzchumanov05.model.Hourly;
@@ -127,8 +132,25 @@ public class FragmentMain extends AbstractFragment {
         }
         // создадим и установим Recycler View для прогноза погоды
         // TODO: повторно по памяти реализовать RecyclerView
-//        addRecyclerView(view);
+        addRecyclerView(view);
     }
+
+    private void addRecyclerView(View view) {
+        RecyclerView recyclerView = view.findViewById(R.id.rvForecast);
+
+        RecyclerView.LayoutManager linearLayout = new LinearLayoutManager(view.getContext(), RecyclerView.HORIZONTAL, false);
+        recyclerView.setLayoutManager(linearLayout);
+
+        // TODO: разобраться, почему не добавляется сепаратор
+        DividerItemDecoration divider = new DividerItemDecoration(context, LinearLayout.VERTICAL);
+        divider.setDrawable(application.getDrawable(R.drawable.separator));
+        recyclerView.addItemDecoration(divider);
+
+        AdapterWeather adapter = new AdapterWeather(times, images, temps);
+        recyclerView.setAdapter(adapter);
+
+    }
+
     private void downloadData(String curCity) {
         Thread thread = new Thread(() -> {
             // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
