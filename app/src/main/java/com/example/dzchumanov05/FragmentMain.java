@@ -4,14 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -49,7 +47,7 @@ import java.util.stream.Collectors;
 import javax.net.ssl.HttpsURLConnection;
 
 public class FragmentMain extends AbstractFragment {
-    private static final String CITY = "CITY";
+    static final String CITY = "CITY";
     private Context application;
     private Context context;
     private final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток

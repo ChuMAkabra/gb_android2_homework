@@ -21,6 +21,7 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer;
     private NavigationView navView;
     private Toolbar toolbar;
+    String lastCityName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -39,12 +40,15 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
 
         // пока что просто добавим пустой основной фрагмент
         // TODO: вынести работу с getSupportFragmentManager в отдельный метод
+        FragmentMain fragmentMain = FragmentMain.create("Moscow");
         getSupportFragmentManager()
                 .beginTransaction()
                 // TODO: вместо Москвы определять город по локации
-                .replace(R.id.fragment_main, FragmentMain.create("Moscow"), null)
+                .replace(R.id.fragment_main, fragmentMain, null)
                 .commit();
-
+        if (fragmentMain.getArguments() != null) {
+            lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
+        }
     }
 
     private Toolbar initToolbar() {
@@ -86,10 +90,16 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                FragmentMain fragmentMain = FragmentMain.create(query);
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.fragment_main, FragmentMain.create(query), null)
+                        .replace(R.id.fragment_main,  fragmentMain, null)
                         .commit();
+
+                if (fragmentMain.getArguments() != null) {
+                    lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
+                }
+
                 // TODO: спрятать Search ActionView? Или пусть пользователь и дальше вводит?
                 return false;
             }
@@ -129,9 +139,10 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
         switch (item.getItemId()) {
             // TODO: добавлять в стек только главную страницу
             case R.id.home:
+                // TODO: открыть фрагмент с данными о городе из последнего поиска (или Мск по умолчанию)
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.fragment_main, new FragmentMain(), null)
+                        .replace(R.id.fragment_main, FragmentMain.create(lastCityName), null)
                         .commit();
                 break;
             case R.id.tools:
