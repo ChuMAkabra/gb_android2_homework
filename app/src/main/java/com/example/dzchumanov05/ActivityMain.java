@@ -39,6 +39,8 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         toolbar = initToolbar();
         // настраиваем боковую панель (навигационное меню)
         initDrawer(toolbar);
+        // сохраняем ссылку на SharedPreferences
+        sp = getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
 
         //TODO: при первом запуске по геолокации определить город.
         // Если нет доступа, вывести последний город из истории.
@@ -47,56 +49,8 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
 
         // при первом запуске показать погоду для последнего города из истории поиска
         if(savedInstanceState == null) {
-            // TODO: создать фрагмент для последнего открытого города из истории (SharedPref)
-            lastCityName = getLastCityName();
+            lastCityName = getSPCityName();
             createFragment(lastCityName);
-        }
-    }
-
-    private String getLastCityName() {
-        sp = getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
-        // если приложение запускается впервые после установки, показать погоду для Москвы
-        return sp.getString(SP_LAST_CITY, "Moscow");
-    }
-
-    private void createFragment(String cityQuery) {
-        // TODO: создадим фрагмент, если указанный город есть в базе
-        // правим вводимое название города (удаляем лишние пробелы, заменяем
-        // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
-        String cityNameRes = FragmentMain.prepareCityName(cityQuery);
-
-        // получим данные о текущей погоде, если указанный город есть в базе
-        Thread thread = new Thread(() -> {
-           weatherRequest = FragmentMain.getCurrentWeather(cityNameRes);
-        });
-
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // если данные найдены, выведем их в новый фрагмент
-        if (weatherRequest != null) {
-            FragmentMain fragmentMain = FragmentMain.create(cityNameRes);
-            getSupportFragmentManager()
-                .beginTransaction()
-                // TODO: вместо Москвы определять город по локации
-                .replace(R.id.fragment_main, fragmentMain, null)
-                .commit();
-
-            // перезапишем историю поиска
-            if (fragmentMain.getArguments() != null) {
-                lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
-                sp.edit()
-                        .putString(SP_LAST_CITY, lastCityName)
-                        .apply();
-            }
-        }
-        else {
-            // иначе выведем диалоговое окно с причиной ошибки
-            Toast.makeText(this, "OOPS", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -127,6 +81,77 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         navView = drawer.findViewById(R.id.navigation_bar);
         navView.setNavigationItemSelectedListener(this);
         // TODO: менять сэндвич на стрелочку, когда находимся не на главной странице
+    }
+
+    private String getSPCityName() {
+        // TODO: вместо Москвы определять город по локации
+        // если приложение запускается впервые после установки, город - Москва
+        return sp.getString(SP_LAST_CITY, "Moscow");
+    }
+
+    private void createFragment(String cityQuery) {
+        // TODO: создадим фрагмент, если указанный город есть в базе
+        // правим вводимое название города (удаляем лишние пробелы, заменяем
+        // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
+        String cityNameRes = prepareCityName(cityQuery);
+
+        // получим данные о текущей погоде, если указанный город есть в базе
+        Thread thread = new Thread(() -> {
+           weatherRequest = FragmentMain.getCurrentWeather(cityNameRes);
+        });
+
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // если данные найдены, выведем их в новый фрагмент
+        if (weatherRequest != null) {
+            FragmentMain fragmentMain = FragmentMain.create(cityNameRes, weatherRequest);
+            getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_main, fragmentMain, null)
+                .commit();
+
+            // перезапишем историю поиска
+            if (fragmentMain.getArguments() != null) {
+                lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
+                setSPCityName(lastCityName);
+            }
+        }
+        else {
+            // иначе выведем диалоговое окно с причиной ошибки
+            // TODO: заменить тост на диалоговое окно
+            Toast.makeText(this, "OOPS", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void setSPCityName(String cityName) {
+        sp.edit()
+                .putString(SP_LAST_CITY, cityName)
+                .apply();
+    }
+    static String prepareCityName(String cityName) {
+        // разделим название города на части (если > 2 слов), удалив лишние пробелы
+        String[] parts = cityName
+                .replaceAll("\\s{2,}", " ")
+                .trim()
+                .split("[\\s|-]");
+
+        // начнем название города с первого слова (с заглавной буквы)
+        String cityNameRes = capitalize(parts[0]);
+        // добавим через пробел другие части с большой буквы (если > 2 слов)
+        if (parts.length > 1) {
+            for (int i = 1; i < parts.length; i++) {
+                parts[i] = capitalize(parts[i]);
+                cityNameRes = String.format("%s %s", cityNameRes, parts[i]);
+            }
+        }
+        return cityNameRes;
+    }
+    private static String capitalize(String word) {
+        return String.format("%s%s", word.substring(0, 1).toUpperCase(), word.substring(1).toLowerCase());
     }
 
     @Override
@@ -180,7 +205,7 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
             // TODO: добавлять в стек только главную страницу
             case R.id.home:
                 // TODO: открыть фрагмент с данными о городе из последнего поиска (или Мск по умолчанию)
-                lastCityName = getLastCityName();
+                lastCityName = getSPCityName();
                 createFragment(lastCityName);
                 break;
             case R.id.tools:

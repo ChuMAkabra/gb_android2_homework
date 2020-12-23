@@ -50,12 +50,12 @@ import javax.net.ssl.HttpsURLConnection;
 public class FragmentMain extends AbstractFragment {
     static final String CITY = "CITY";
     static final String CURRENT_WEATHER = "CURRENT_WEATHER";
-    private static WeatherRequest weatherRequest;
     private Context application;
     private Context context;
     private static final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток
     private final static String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
     public static final String YANDEX_POGODA_LINK = "https://yandex.ru/pogoda/";
+    private WeatherRequest curWeather;
     private String curCity;
     private String curTemp;
     private Bitmap curIcon;
@@ -72,26 +72,8 @@ public class FragmentMain extends AbstractFragment {
     TextView details;
     TextView name;
 
-    public static FragmentMain create(String cityName){
-        // правим вводимое название города (удаляем лишние пробелы, заменяем
-        // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
-//        String cityNameRes = prepareCityName(cityName);
-//        // получим данные о текущей погоде, если указанный город есть в базе
-//
-//        Thread thread = new Thread(() -> {
-//            weatherRequest = getCurrentWeather(cityNameRes);
-//        });
-//
-//        thread.start();
-//        try {
-//            thread.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-//        if (weatherRequest != null) {
+    public static FragmentMain create(String cityName, WeatherRequest weatherRequest){
             FragmentMain fragment = new FragmentMain();
-
             // записываем имя города и текущую погоду как аргументы фрагмента
             Bundle args = new Bundle();
             args.putString(CITY, cityName);
@@ -99,40 +81,20 @@ public class FragmentMain extends AbstractFragment {
             fragment.setArguments(args);
 
             return fragment;
-//        }
-//        else return null;
     }
 
     static WeatherRequest getCurrentWeather(String cityName) {
+        // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
         String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, cityName, BuildConfig.WEATHER_API_KEY);
         return (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
     }
 
-    static String prepareCityName(String cityName) {
-        // разделим название города на части (если > 2 слов), удалив лишние пробелы
-        String[] parts = cityName
-                .replaceAll("\\s{2,}", " ")
-                .trim()
-                .split("[\\s|-]");
-
-        // начнем название города с первого слова (с заглавной буквы)
-        String cityNameRes = capitalize(parts[0]);
-        // добавим через пробел другие части с большой буквы (если > 2 слов)
-        if (parts.length > 1) {
-            for (int i = 1; i < parts.length; i++) {
-                parts[i] = capitalize(parts[i]);
-                cityNameRes = String.format("%s %s", cityNameRes, parts[i]);
-            }
-        }
-        return cityNameRes;
-    }
-
-    private static String capitalize(String word) {
-        return String.format("%s%s", word.substring(0, 1).toUpperCase(), word.substring(1).toLowerCase());
-    }
-
-    private String getCity() {
+    private String getCurCity() {
         return (getArguments() != null) ? getArguments().getString(CITY) : null;
+    }
+
+    public WeatherRequest getCurWeather() {
+        return (getArguments() != null) ? (WeatherRequest)getArguments().getSerializable(CURRENT_WEATHER) : null;
     }
 
     @Nullable
@@ -149,9 +111,9 @@ public class FragmentMain extends AbstractFragment {
         super.onViewCreated(view, savedInstanceState);
 
         // получим данные с сервера
-        if ((curCity = getCity()) != null) downloadData(curCity);
+        if ((curCity = getCurCity()) != null) downloadData(curCity);
         // выведем данные в элементы фрагмента (повторно запросим название города - оно могло стать null)
-        if ((curCity = getCity()) != null) outputData((ConstraintLayout) view, curCity);
+        if ((curCity = getCurCity()) != null) outputData((ConstraintLayout) view, curCity);
 
         // создадим и установим Recycler View для прогноза погоды
         // TODO: повторно по памяти реализовать RecyclerView
@@ -160,15 +122,12 @@ public class FragmentMain extends AbstractFragment {
 
     private void downloadData(String curCity) {
         Thread thread = new Thread(() -> {
-            // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
-            String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, curCity, BuildConfig.WEATHER_API_KEY);
-            final WeatherRequest weatherRequest = (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
-            // TODO: возможно добавить здесь проверку на weatherRequest != null (возможно вывести диалоговое окно, что такого города не существует)
-            if (weatherRequest != null) {
-                float lat = weatherRequest.getCoord().getLat();
-                float lon = weatherRequest.getCoord().getLon();
-                curTemp = floatTempToString(weatherRequest.getMain().getTemp());
-                curIcon = getBitmap(weatherRequest.getWeather()[0].getIcon());
+            curWeather = getCurWeather();
+            if (curWeather != null) {
+                float lat = curWeather.getCoord().getLat();
+                float lon = curWeather.getCoord().getLon();
+                curTemp = floatTempToString(curWeather.getMain().getTemp());
+                curIcon = getBitmap(curWeather.getWeather()[0].getIcon());
                 curLink = generateLink(curCity);
 
                 // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
