@@ -7,11 +7,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -123,8 +123,14 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         }
         else {
             // иначе выведем диалоговое окно с причиной ошибки
-            // TODO: заменить тост на диалоговое окно
-            Toast.makeText(this, "OOPS", Toast.LENGTH_SHORT).show();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.not_found_title)
+                    .setMessage(R.string.city_not_found_msg)
+                    .setCancelable(true)
+                    .setIcon(R.mipmap.ic_launcher_round)
+            ;
+            AlertDialog alert = builder.create();
+            alert.show();
         }
     }
     private void setSPCityName(String cityName) {

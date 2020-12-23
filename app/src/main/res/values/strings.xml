@@ -18,4 +18,6 @@
     <string name="website" translatable="false"><u>http://d91511ib.beget.tech</u></string>
     <string name="app_icon_desc">App icon</string>
     <string name="dark_theme">Dark Theme</string>
+    <string name="not_found_title">Data wasn\'t found</string>
+    <string name="city_not_found_msg">Please check city spelling</string>
 </resources>
