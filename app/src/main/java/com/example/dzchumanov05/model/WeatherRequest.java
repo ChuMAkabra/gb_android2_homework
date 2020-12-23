@@ -1,6 +1,8 @@
 package com.example.dzchumanov05.model;
 
-public class WeatherRequest {
+import java.io.Serializable;
+
+public class WeatherRequest implements Serializable {
     private long dt;
     private long timezone;
     private Coord coord;

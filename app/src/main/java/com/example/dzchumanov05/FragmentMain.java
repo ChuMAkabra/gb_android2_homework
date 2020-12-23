@@ -49,10 +49,12 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class FragmentMain extends AbstractFragment {
     static final String CITY = "CITY";
+    static final String CURRENT_WEATHER = "CURRENT_WEATHER";
+    private static WeatherRequest weatherRequest;
     private Context application;
     private Context context;
-    private final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток
-    private final String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
+    private static final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток
+    private final static String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
     public static final String YANDEX_POGODA_LINK = "https://yandex.ru/pogoda/";
     private String curCity;
     private String curTemp;
@@ -71,19 +73,42 @@ public class FragmentMain extends AbstractFragment {
     TextView name;
 
     public static FragmentMain create(String cityName){
-        FragmentMain fragment = new FragmentMain();
         // правим вводимое название города (удаляем лишние пробелы, заменяем
         // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
-        String cityNameRes = prepareCityName(cityName);
-        // записываем имя города в качестве аргумента фрагмента
-        Bundle args = new Bundle();
-        args.putString(CITY, cityNameRes);
-        fragment.setArguments(args);
+//        String cityNameRes = prepareCityName(cityName);
+//        // получим данные о текущей погоде, если указанный город есть в базе
+//
+//        Thread thread = new Thread(() -> {
+//            weatherRequest = getCurrentWeather(cityNameRes);
+//        });
+//
+//        thread.start();
+//        try {
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
-        return fragment;
+//        if (weatherRequest != null) {
+            FragmentMain fragment = new FragmentMain();
+
+            // записываем имя города и текущую погоду как аргументы фрагмента
+            Bundle args = new Bundle();
+            args.putString(CITY, cityName);
+            args.putSerializable(CURRENT_WEATHER, weatherRequest);
+            fragment.setArguments(args);
+
+            return fragment;
+//        }
+//        else return null;
     }
 
-    private static String prepareCityName(String cityName) {
+    static WeatherRequest getCurrentWeather(String cityName) {
+        String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, cityName, BuildConfig.WEATHER_API_KEY);
+        return (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
+    }
+
+    static String prepareCityName(String cityName) {
         // разделим название города на части (если > 2 слов), удалив лишние пробелы
         String[] parts = cityName
                 .replaceAll("\\s{2,}", " ")
@@ -228,7 +253,7 @@ public class FragmentMain extends AbstractFragment {
         return Uri.parse(YANDEX_POGODA_LINK + city);
     }
 
-    private Object getObjectFromGson(String apiCall, Class<? extends Object> objClass) {
+    static Object getObjectFromGson(String apiCall, Class<? extends Object> objClass) {
         HttpsURLConnection urlConnection = null;
         try {
             URL url = new URL(apiCall);
@@ -251,7 +276,7 @@ public class FragmentMain extends AbstractFragment {
             //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
             e.printStackTrace();
             // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-            handler.post(() -> Toast.makeText(this.getContext(), "Something went wrong...!", Toast.LENGTH_LONG).show());
+//            handler.post(() -> Toast.makeText(context, "Something went wrong...!", Toast.LENGTH_LONG).show());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -260,7 +285,7 @@ public class FragmentMain extends AbstractFragment {
         return null;
     }
 
-    private String getLines(BufferedReader in) {
+    private static String getLines(BufferedReader in) {
         // TODO: подробно изучить эту строку
         return in.lines().collect(Collectors.joining("\n"));
     }

@@ -3,21 +3,21 @@ package com.example.dzchumanov05;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.example.dzchumanov05.model.WeatherRequest;
 import com.google.android.material.navigation.NavigationView;
 
 public class ActivityMain extends AbstractActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -27,6 +27,8 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     String lastCityName;
     private SharedPreferences sp;
     private final String PREVIOUS_ORIENTATION = "PREVIOUS_ORIENTATION";
+
+    private WeatherRequest weatherRequest;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,24 +60,43 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     }
 
     private void createFragment(String cityQuery) {
-        // TODO: проверим, есть ли указанный город в базе
-        FragmentMain fragmentMain = FragmentMain.create(cityQuery);
-        // TODO: если да, получим и выведем данные во фрагмент
-        if (fragmentMain.getArguments() != null) {
+        // TODO: создадим фрагмент, если указанный город есть в базе
+        // правим вводимое название города (удаляем лишние пробелы, заменяем
+        // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
+        String cityNameRes = FragmentMain.prepareCityName(cityQuery);
+
+        // получим данные о текущей погоде, если указанный город есть в базе
+        Thread thread = new Thread(() -> {
+           weatherRequest = FragmentMain.getCurrentWeather(cityNameRes);
+        });
+
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // если данные найдены, выведем их в новый фрагмент
+        if (weatherRequest != null) {
+            FragmentMain fragmentMain = FragmentMain.create(cityNameRes);
             getSupportFragmentManager()
-                    .beginTransaction()
-                    // TODO: вместо Москвы определять город по локации
-                    .replace(R.id.fragment_main, fragmentMain, null)
-                    .commit();
+                .beginTransaction()
+                // TODO: вместо Москвы определять город по локации
+                .replace(R.id.fragment_main, fragmentMain, null)
+                .commit();
 
             // перезапишем историю поиска
-            lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
-            sp.edit()
-                    .putString(SP_LAST_CITY, lastCityName)
-                    .apply();
+            if (fragmentMain.getArguments() != null) {
+                lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
+                sp.edit()
+                        .putString(SP_LAST_CITY, lastCityName)
+                        .apply();
+            }
         }
         else {
-            // TODO: иначе вывести диалоговое окно с причиной ошибки
+            // иначе выведем диалоговое окно с причиной ошибки
+            Toast.makeText(this, "OOPS", Toast.LENGTH_SHORT).show();
         }
     }
 
