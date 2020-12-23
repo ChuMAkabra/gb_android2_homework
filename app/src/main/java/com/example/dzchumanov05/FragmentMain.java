@@ -11,13 +11,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +54,7 @@ public class FragmentMain extends AbstractFragment {
     private final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток
     private final String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
     public static final String YANDEX_POGODA_LINK = "https://yandex.ru/pogoda/";
+    private String curCity;
     private String curTemp;
     private Bitmap curIcon;
     private Uri curLink;
@@ -73,7 +75,7 @@ public class FragmentMain extends AbstractFragment {
         // правим вводимое название города (удаляем лишние пробелы, заменяем
         // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
         String cityNameRes = prepareCityName(cityName);
-        // записываем данные в качестве аргументов фрагмента
+        // записываем имя города в качестве аргумента фрагмента
         Bundle args = new Bundle();
         args.putString(CITY, cityNameRes);
         fragment.setArguments(args);
@@ -121,32 +123,14 @@ public class FragmentMain extends AbstractFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final String curCity = getCity();
-        if (curCity != null) {
-            // получим данные с сервера
-            downloadData(curCity);
-            // выведем данные в элементы фрагмента
-            outputData((ConstraintLayout) view, curCity);
-        }
+        // получим данные с сервера
+        if ((curCity = getCity()) != null) downloadData(curCity);
+        // выведем данные в элементы фрагмента (повторно запросим название города - оно могло стать null)
+        if ((curCity = getCity()) != null) outputData((ConstraintLayout) view, curCity);
+
         // создадим и установим Recycler View для прогноза погоды
         // TODO: повторно по памяти реализовать RecyclerView
         addRecyclerView(view);
-    }
-
-    private void addRecyclerView(View view) {
-        RecyclerView recyclerView = view.findViewById(R.id.rvForecast);
-
-        RecyclerView.LayoutManager linearLayout = new LinearLayoutManager(view.getContext(), RecyclerView.HORIZONTAL, false);
-        recyclerView.setLayoutManager(linearLayout);
-
-        // TODO: разобраться, почему не добавляется сепаратор
-        DividerItemDecoration divider = new DividerItemDecoration(context, LinearLayout.VERTICAL);
-        divider.setDrawable(application.getDrawable(R.drawable.separator));
-        recyclerView.addItemDecoration(divider);
-
-        AdapterWeather adapter = new AdapterWeather(times, images, temps);
-        recyclerView.setAdapter(adapter);
-
     }
 
     private void downloadData(String curCity) {
@@ -155,55 +139,79 @@ public class FragmentMain extends AbstractFragment {
             String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, curCity, BuildConfig.WEATHER_API_KEY);
             final WeatherRequest weatherRequest = (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
             // TODO: возможно добавить здесь проверку на weatherRequest != null (возможно вывести диалоговое окно, что такого города не существует)
-            float lat = weatherRequest.getCoord().getLat();
-            float lon = weatherRequest.getCoord().getLon();
-            curTemp = floatTempToString(weatherRequest.getMain().getTemp());
-            curIcon = getBitmap(weatherRequest.getWeather()[0].getIcon());
-            curLink = generateLink(curCity);
+            if (weatherRequest != null) {
+                float lat = weatherRequest.getCoord().getLat();
+                float lon = weatherRequest.getCoord().getLon();
+                curTemp = floatTempToString(weatherRequest.getMain().getTemp());
+                curIcon = getBitmap(weatherRequest.getWeather()[0].getIcon());
+                curLink = generateLink(curCity);
 
-            // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
-            String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s",
-                    WEATHER_URL_DOMAIN, Float.toString(lat), Float.toString(lon), BuildConfig.WEATHER_API_KEY);
-            WeatherOneCall weatherOneCall = (WeatherOneCall) getObjectFromGson(apiCall2, WeatherOneCall.class);
-            // TODO: возможно добавить здесь проверку на weatherOneCall != null (возможно вывести диалоговое окно, что данные по городу не найдены - хотя это странно)
-            hourly = weatherOneCall.getHourly();
-            timezoneOffset = weatherOneCall.getTimezone_offset();
-            images = new ArrayList<>();
+                // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
+                String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, Float.toString(lat), Float.toString(lon), BuildConfig.WEATHER_API_KEY);
+                WeatherOneCall weatherOneCall = (WeatherOneCall) getObjectFromGson(apiCall2, WeatherOneCall.class);
+                // TODO: возможно добавить здесь проверку на weatherOneCall != null (возможно вывести диалоговое окно, что данные по городу не найдены - хотя это странно)
+                if (weatherOneCall != null) {
+                    hourly = weatherOneCall.getHourly();
+                    timezoneOffset = weatherOneCall.getTimezone_offset();
+                    images = new ArrayList<>();
 
-            // запрос 3: по именам иконок загрузить их изображения с сервера
-            // получаем лист имен всех иконок
-            List<String> imageNamesAll = new ArrayList<>();
-            for (Hourly hour : hourly) {
-                imageNamesAll.add(hour.getWeather()[0].getIcon());
+                    // запрос 3: по именам иконок загрузить их изображения с сервера
+                    // получаем лист имен всех иконок
+                    List<String> imageNamesAll = new ArrayList<>();
+                    for (Hourly hour : hourly) {
+                        imageNamesAll.add(hour.getWeather()[0].getIcon());
+                    }
+                    // получаем набор имен уникальных иконок
+                    Set<String> imageNamesUnique = new HashSet<>(imageNamesAll);
+                    // получаем хэш-таблицу уникальных битмапов
+                    Map<String, Bitmap> imagesUnique = new HashMap<>(imageNamesUnique.size());
+                    // устанавливаем обратный отчет потоков
+                    CountDownLatch countDownLatch = new CountDownLatch(imageNamesUnique.size());
+                    // создаем динамический пул потоков (скачать картинки в оптимальном кол-ве потоков)
+                    ExecutorService executorService = Executors.newCachedThreadPool();
+                    // для каждой уникальной картинки:
+                    for (String iName : imageNamesUnique) {
+                        // качаем картинку в отдельном потоке
+                        executorService.execute(() -> {
+                            Bitmap image = getBitmap(iName);
+                            if (image != null) imagesUnique.put(iName, image);
+                            countDownLatch.countDown();
+                        });
+                    }
+                    // дожидаемся завершения всех потоков
+                    try {
+                        countDownLatch.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    // закрываем пул потоков
+                    executorService.shutdown();
+                    // получаем лист всех битмапов (в правильном порядке!)
+                    for (String name : imageNamesAll) {
+                        images.add(imagesUnique.get(name));
+                    }
+                } else {
+                    handler.post(() -> {
+                        // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
+                        Toast.makeText(this.getContext(), "Oops, there is no data for the city...", Toast.LENGTH_SHORT).show();
+                        // обнулим записанное ранее в аргументы фрагмента название города
+                        // (это укажет на отсутствие прогноза для города в базе OneCall)
+                        if (this.getArguments() != null) {
+                            this.getArguments().putString(CITY, null);
+                        }
+                    });
+                }
             }
-            // получаем набор имен уникальных иконок
-            Set<String> imageNamesUnique = new HashSet<>(imageNamesAll);
-            // получаем хэш-таблицу уникальных битмапов
-            Map<String, Bitmap> imagesUnique = new HashMap<>(imageNamesUnique.size());
-            // устанавливаем обратный отчет потоков
-            CountDownLatch countDownLatch = new CountDownLatch(imageNamesUnique.size());
-            // создаем динамический пул потоков (скачать картинки в оптимальном кол-ве потоков)
-            ExecutorService executorService = Executors.newCachedThreadPool();
-            // для каждой уникальной картинки:
-            for (String iName : imageNamesUnique) {
-                // качаем картинку в отдельном потоке
-                executorService.execute(() -> {
-                    Bitmap image = getBitmap(iName);
-                    if (image != null) imagesUnique.put(iName,image);
-                    countDownLatch.countDown();
+            else {
+                handler.post(() -> {
+                    // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
+                    Toast.makeText(this.getContext(), "Oops, there is no such city...", Toast.LENGTH_SHORT).show();
+                    // обнулим записанное ранее в аргументы фрагмента название города
+                    // (это укажет на отсутствие города в базе - вероятно допущена опечатка)
+                    if (this.getArguments() != null) {
+                        this.getArguments().putString(CITY, null);
+                    }
                 });
-            }
-            // дожидаемся завершения всех потоков
-            try {
-                countDownLatch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            // закрываем пул потоков
-            executorService.shutdown();
-            // получаем лист всех битмапов (в правильном порядке!)
-            for (String name : imageNamesAll) {
-                images.add(imagesUnique.get(name));
             }
         });
         thread.start();
@@ -251,6 +259,7 @@ public class FragmentMain extends AbstractFragment {
         }
         return null;
     }
+
     private String getLines(BufferedReader in) {
         // TODO: подробно изучить эту строку
         return in.lines().collect(Collectors.joining("\n"));
@@ -320,6 +329,23 @@ public class FragmentMain extends AbstractFragment {
             times.add(timeToString(time));
             temps.add(floatTempToString(h.getTemp()));
         }
+    }
+
+    private void addRecyclerView(View view) {
+        RecyclerView recyclerView = view.findViewById(R.id.rvForecast);
+
+        RecyclerView.LayoutManager linearLayout = new LinearLayoutManager(view.getContext(), RecyclerView.HORIZONTAL, false);
+        recyclerView.setLayoutManager(linearLayout);
+
+        // TODO: разобраться, почему не добавляется сепаратор
+        DividerItemDecoration divider = new DividerItemDecoration(context, LinearLayoutManager.VERTICAL);
+//        divider.setDrawable(application.getDrawable(R.drawable.separator));
+        divider.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(application, R.drawable.separator)));
+        recyclerView.addItemDecoration(divider);
+
+        AdapterWeather adapter = new AdapterWeather(times, images, temps);
+        recyclerView.setAdapter(adapter);
+
     }
 
 }

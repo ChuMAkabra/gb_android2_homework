@@ -1,6 +1,9 @@
 package com.example.dzchumanov05;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
@@ -17,11 +20,13 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 
-public class ActivityMain extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class ActivityMain extends AbstractActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawer;
     private NavigationView navView;
     private Toolbar toolbar;
     String lastCityName;
+    private SharedPreferences sp;
+    private final String PREVIOUS_ORIENTATION = "PREVIOUS_ORIENTATION";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -38,16 +43,39 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
         // Если история пуста - предложить пользователю воспользоваться поиском
         // Возможно вывести инструкцию во всплывающем окне
 
-        // пока что просто добавим пустой основной фрагмент
-        // TODO: вынести работу с getSupportFragmentManager в отдельный метод
-        FragmentMain fragmentMain = FragmentMain.create("Moscow");
-        getSupportFragmentManager()
-                .beginTransaction()
-                // TODO: вместо Москвы определять город по локации
-                .replace(R.id.fragment_main, fragmentMain, null)
-                .commit();
+        // при первом запуске показать погоду для последнего города из истории поиска
+        if(savedInstanceState == null) {
+            // TODO: создать фрагмент для последнего открытого города из истории (SharedPref)
+            lastCityName = getLastCityName();
+            createFragment(lastCityName);
+        }
+    }
+
+    private String getLastCityName() {
+        sp = getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
+        // если приложение запускается впервые после установки, показать погоду для Москвы
+        return sp.getString(SP_LAST_CITY, "Moscow");
+    }
+
+    private void createFragment(String cityQuery) {
+        // TODO: проверим, есть ли указанный город в базе
+        FragmentMain fragmentMain = FragmentMain.create(cityQuery);
+        // TODO: если да, получим и выведем данные во фрагмент
         if (fragmentMain.getArguments() != null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    // TODO: вместо Москвы определять город по локации
+                    .replace(R.id.fragment_main, fragmentMain, null)
+                    .commit();
+
+            // перезапишем историю поиска
             lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
+            sp.edit()
+                    .putString(SP_LAST_CITY, lastCityName)
+                    .apply();
+        }
+        else {
+            // TODO: иначе вывести диалоговое окно с причиной ошибки
         }
     }
 
@@ -90,16 +118,7 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                FragmentMain fragmentMain = FragmentMain.create(query);
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_main,  fragmentMain, null)
-                        .commit();
-
-                if (fragmentMain.getArguments() != null) {
-                    lastCityName = fragmentMain.getArguments().getString(FragmentMain.CITY);
-                }
-
+                createFragment(query);
                 // TODO: спрятать Search ActionView? Или пусть пользователь и дальше вводит?
                 return false;
             }
@@ -140,10 +159,8 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
             // TODO: добавлять в стек только главную страницу
             case R.id.home:
                 // TODO: открыть фрагмент с данными о городе из последнего поиска (или Мск по умолчанию)
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_main, FragmentMain.create(lastCityName), null)
-                        .commit();
+                lastCityName = getLastCityName();
+                createFragment(lastCityName);
                 break;
             case R.id.tools:
                 getSupportFragmentManager()
@@ -176,5 +193,11 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
         // если боковая панель открыта, при нажатии кнопки "Назад" она закроется
         if(drawer.isDrawerOpen(GravityCompat.START)) drawer.closeDrawer(GravityCompat.START);
         else super.onBackPressed();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(PREVIOUS_ORIENTATION, getResources().getConfiguration().orientation);
     }
 }
