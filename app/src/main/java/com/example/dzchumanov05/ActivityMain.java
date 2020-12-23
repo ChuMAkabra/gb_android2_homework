@@ -89,8 +89,8 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         return sp.getString(SP_LAST_CITY, "Moscow");
     }
 
+    // создадим фрагмент, если указанный город есть в базе.
     private void createFragment(String cityQuery) {
-        // TODO: создадим фрагмент, если указанный город есть в базе
         // правим вводимое название города (удаляем лишние пробелы, заменяем
         // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
         String cityNameRes = prepareCityName(cityQuery);
@@ -158,7 +158,7 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
 
-        // TODO: реализовать поиск
+        // реализуем функцию поиска города и вывода его данных во фрагмент
         MenuItem searchMenu =  menu.findItem(R.id.search);
         SearchView searchView = (SearchView) searchMenu.getActionView();
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -166,6 +166,7 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
             public boolean onQueryTextSubmit(String query) {
                 createFragment(query);
                 // TODO: спрятать Search ActionView? Или пусть пользователь и дальше вводит?
+                /** как программно установить фокус на элементе навигационного меню? */
                 return false;
             }
 
@@ -204,7 +205,7 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         switch (item.getItemId()) {
             // TODO: добавлять в стек только главную страницу
             case R.id.home:
-                // TODO: открыть фрагмент с данными о городе из последнего поиска (или Мск по умолчанию)
+                // открыть фрагмент с данными о городе из последнего поиска (или Мск по умолчанию)
                 lastCityName = getSPCityName();
                 createFragment(lastCityName);
                 break;

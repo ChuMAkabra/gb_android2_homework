@@ -52,7 +52,7 @@ public class FragmentMain extends AbstractFragment {
     static final String CURRENT_WEATHER = "CURRENT_WEATHER";
     private Context application;
     private Context context;
-    private static final Handler handler = new Handler(); // хендлер, указывающий на основной (UI) поток
+    private Handler handler;
     private final static String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
     public static final String YANDEX_POGODA_LINK = "https://yandex.ru/pogoda/";
     private WeatherRequest curWeather;
@@ -116,11 +116,11 @@ public class FragmentMain extends AbstractFragment {
         if ((curCity = getCurCity()) != null) outputData((ConstraintLayout) view, curCity);
 
         // создадим и установим Recycler View для прогноза погоды
-        // TODO: повторно по памяти реализовать RecyclerView
-        addRecyclerView(view);
+        initRecyclerView(view);
     }
 
     private void downloadData(String curCity) {
+        handler  = new Handler(); // хендлер, указывающий на основной (UI) поток
         Thread thread = new Thread(() -> {
             curWeather = getCurWeather();
             if (curWeather != null) {
@@ -133,7 +133,6 @@ public class FragmentMain extends AbstractFragment {
                 // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
                 String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, Float.toString(lat), Float.toString(lon), BuildConfig.WEATHER_API_KEY);
                 WeatherOneCall weatherOneCall = (WeatherOneCall) getObjectFromGson(apiCall2, WeatherOneCall.class);
-                // TODO: возможно добавить здесь проверку на weatherOneCall != null (возможно вывести диалоговое окно, что данные по городу не найдены - хотя это странно)
                 if (weatherOneCall != null) {
                     hourly = weatherOneCall.getHourly();
                     timezoneOffset = weatherOneCall.getTimezone_offset();
@@ -315,21 +314,23 @@ public class FragmentMain extends AbstractFragment {
         }
     }
 
-    private void addRecyclerView(View view) {
+    private void initRecyclerView(View view) {
+        // получаем RV
         RecyclerView recyclerView = view.findViewById(R.id.rvForecast);
-
-        RecyclerView.LayoutManager linearLayout = new LinearLayoutManager(view.getContext(), RecyclerView.HORIZONTAL, false);
+        // Эта установка служит для повышения производительности системы
+        // (все элементы будут иметь одинаковый размер, и не надо его пересчитывать)
+        recyclerView.setHasFixedSize(true);
+        // добавляем к RV менеджер макетов
+        RecyclerView.LayoutManager linearLayout = new LinearLayoutManager(view.getContext(), LinearLayoutManager.HORIZONTAL, false);
         recyclerView.setLayoutManager(linearLayout);
-
-        // TODO: разобраться, почему не добавляется сепаратор
-        DividerItemDecoration divider = new DividerItemDecoration(context, LinearLayoutManager.VERTICAL);
-//        divider.setDrawable(application.getDrawable(R.drawable.separator));
+        // добавляем к RV докоратор в виде сепаратора
+        DividerItemDecoration divider = new DividerItemDecoration(context, LinearLayoutManager.HORIZONTAL);
         divider.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(application, R.drawable.separator)));
         recyclerView.addItemDecoration(divider);
-
-        AdapterWeather adapter = new AdapterWeather(times, images, temps);
+        // добавляем к RV адаптер
+        AdapterWeather adapter = null;
+        if(times != null)  adapter = new AdapterWeather(times, images, temps);
         recyclerView.setAdapter(adapter);
-
     }
 
 }
