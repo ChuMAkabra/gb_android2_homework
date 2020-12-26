@@ -21,7 +21,7 @@ public abstract class AbstractActivity extends AppCompatActivity {
     protected String className = this.getClass().getName();
     protected final String SP_NAME = "WEATHER";
     protected final String SP_DARK_THEME = "IS_DARK_THEME";
-    protected final String SP_LAST_CITY = "LAST_CITY";
+    protected final String SP_LAST_CITY = "SP_LAST_CITY";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

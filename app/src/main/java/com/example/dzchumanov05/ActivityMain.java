@@ -1,12 +1,16 @@
 package com.example.dzchumanov05;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -128,6 +132,9 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
                     .setMessage(R.string.city_not_found_msg)
                     .setCancelable(true)
                     .setIcon(R.mipmap.ic_launcher_round)
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        // просто добавим кнопку ОК. По нажатии окно закроется
+                    })
             ;
             AlertDialog alert = builder.create();
             alert.show();
@@ -188,7 +195,35 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             // TODO: отказаться от опций тулбара в пользу нижнего навигационного меню
+            /**
+             * стоит ли обращать внимание на следующее предупреждение?
+             * Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them in switch case statements
+             * */
+
             case R.id.about:
+                /**
+                 * Здесь, в отличие от FragmentAbout, ошибки при inflate не возникает
+                 * */
+                // Вариант №1
+//                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//                View view = getLayoutInflater().inflate(R.layout.fragment_about, null);
+//                TextView websiteLink = view.findViewById(R.id.websiteLink);
+//
+//                websiteLink.setOnClickListener(v -> {
+//                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(websiteLink.getText().toString()));
+//                    startActivity(intent);
+//                });
+//
+//                builder.setTitle(R.string.about)
+//                        .setView(view)
+//                        .setCancelable(true)
+//                        .setNegativeButton("CLOSE", (dialog, which) ->{} /*dismiss()*/)
+//                ;
+//
+//                builder.create().show();
+                // Вариант №2
+//                new FragmentAbout().show(getSupportFragmentManager(), "about");
+                // Вариант №3
                 getSupportFragmentManager()
                         .beginTransaction()
 //                        .addToBackStack(null)
@@ -196,10 +231,12 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
                         .commit();
                 return true;
             case R.id.tools:
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_main, new FragmentTools(), null)
-                        .commit();
+                new FragmentTools().show(getSupportFragmentManager(), "tools");
+//                new FragmentTools().show(getSupportFragmentManager(), "tools");
+//                getSupportFragmentManager()
+//                        .beginTransaction()
+//                        .replace(R.id.fragment_main, new FragmentTools(), null)
+//                        .commit();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -216,6 +253,7 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
                 createFragment(lastCityName);
                 break;
             case R.id.tools:
+//                new FragmentTools ().show(getSupportFragmentManager(), "tools");
                 getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.fragment_main, new FragmentTools(), null)
@@ -228,10 +266,11 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
                 break;
             case R.id.about:
                 // TODO: выводить фрагмент в диалоговое окно
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_main, new FragmentAbout(), null)
-                        .commit();
+                new FragmentAbout().show(getSupportFragmentManager(), "about");
+//                getSupportFragmentManager()
+//                        .beginTransaction()
+//                        .replace(R.id.fragment_main, new FragmentAbout(), null)
+//                        .commit();
                 break;
             default:
                 break;

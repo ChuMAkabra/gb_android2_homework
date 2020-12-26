@@ -1,6 +1,8 @@
 package com.example.dzchumanov05.model;
 
-public class Coord {
+import java.io.Serializable;
+
+public class Coord implements Serializable {
     private float lat;
     private float lon;
 

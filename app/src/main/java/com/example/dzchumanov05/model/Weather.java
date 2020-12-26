@@ -1,6 +1,8 @@
 package com.example.dzchumanov05.model;
 
-public class Weather {
+import java.io.Serializable;
+
+public class Weather implements Serializable {
     //    weather.id Weather condition id
     private String main; // Group of weather parameters (Rain, Snow, Extreme etc.)
     private String description; // Weather condition within the group (full list of weather conditions). Get the output in your language

@@ -10,8 +10,9 @@ import android.widget.CompoundButton;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
 
-public class FragmentTools extends AbstractFragment{
+public class FragmentTools extends DialogFragment {
     private SwitchCompat swDarkTheme;
 
     @Nullable
