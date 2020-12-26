@@ -12,7 +12,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 
-public class FragmentTools extends DialogFragment {
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+
+public class FragmentTools extends BottomSheetDialogFragment {
     private SwitchCompat swDarkTheme;
 
     @Nullable
