@@ -73,23 +73,24 @@ public class FragmentMain extends AbstractFragment {
     TextView name;
 
     public static FragmentMain create(String cityName, WeatherRequest weatherRequest){
-            FragmentMain fragment = new FragmentMain();
-            // записываем имя города и текущую погоду как аргументы фрагмента
-            Bundle args = new Bundle();
-            args.putString(CITY, cityName);
-            args.putSerializable(CURRENT_WEATHER, weatherRequest);
-            fragment.setArguments(args);
+        FragmentMain fragment = new FragmentMain();
+        // записываем имя города и текущую погоду как аргументы фрагмента
+        Bundle args = new Bundle();
+        args.putString(CITY, cityName);
+        args.putSerializable(CURRENT_WEATHER, weatherRequest);
+        fragment.setArguments(args);
 
-            return fragment;
+        return fragment;
     }
 
     static WeatherRequest getCurrentWeather(String cityName) {
         // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
         String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, cityName, BuildConfig.WEATHER_API_KEY);
-        return (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
+        return (WeatherRequest) GetWeatherData.getObjectFromGson(apiCall, WeatherRequest.class);
+//        return (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
     }
 
-    private String getCurCity() {
+    public String getCurCity() {
         return (getArguments() != null) ? getArguments().getString(CITY) : null;
     }
 
@@ -131,8 +132,8 @@ public class FragmentMain extends AbstractFragment {
                 curLink = generateLink(curCity);
 
                 // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
-                String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, Float.toString(lat), Float.toString(lon), BuildConfig.WEATHER_API_KEY);
-                WeatherOneCall weatherOneCall = (WeatherOneCall) getObjectFromGson(apiCall2, WeatherOneCall.class);
+                String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, lat, lon, BuildConfig.WEATHER_API_KEY);
+                WeatherOneCall weatherOneCall = (WeatherOneCall) GetWeatherData.getObjectFromGson(apiCall2, WeatherOneCall.class);
                 if (weatherOneCall != null) {
                     hourly = weatherOneCall.getHourly();
                     timezoneOffset = weatherOneCall.getTimezone_offset();
