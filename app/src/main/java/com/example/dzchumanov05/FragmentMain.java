@@ -3,7 +3,6 @@ package com.example.dzchumanov05;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,13 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.dzchumanov05.model.Hourly;
 import com.example.dzchumanov05.model.WeatherOneCall;
 import com.example.dzchumanov05.model.WeatherRequest;
-import com.google.gson.Gson;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,9 +36,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
-import javax.net.ssl.HttpsURLConnection;
 
 public class FragmentMain extends AbstractFragment {
     static final String CITY = "CITY";
@@ -53,7 +43,7 @@ public class FragmentMain extends AbstractFragment {
     private Context application;
     private Context context;
     private Handler handler;
-    private final static String WEATHER_URL_DOMAIN = "https://api.openweathermap.org/data/2.5";
+
     public static final String YANDEX_POGODA_LINK = "https://yandex.ru/pogoda/";
     private WeatherRequest curWeather;
     private String curCity;
@@ -66,7 +56,6 @@ public class FragmentMain extends AbstractFragment {
     private List<String> times;
     private List<String> temps;
 
-    private RecyclerView rvForecast;
     TextView temp;
     ImageView sky;
     TextView details;
@@ -85,9 +74,7 @@ public class FragmentMain extends AbstractFragment {
 
     static WeatherRequest getCurrentWeather(String cityName) {
         // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
-        String apiCall = String.format("%s/weather?q=%s&units=metric&appid=%s", WEATHER_URL_DOMAIN, cityName, BuildConfig.WEATHER_API_KEY);
-        return (WeatherRequest) GetWeatherData.getObjectFromGson(apiCall, WeatherRequest.class);
-//        return (WeatherRequest) getObjectFromGson(apiCall, WeatherRequest.class);
+        return (WeatherRequest) GetWeatherData.getData(cityName);
     }
 
     public String getCurCity() {
@@ -115,7 +102,6 @@ public class FragmentMain extends AbstractFragment {
         if ((curCity = getCurCity()) != null) downloadData(curCity);
         // выведем данные в элементы фрагмента (повторно запросим название города - оно могло стать null)
         if ((curCity = getCurCity()) != null) outputData((ConstraintLayout) view, curCity);
-
         // создадим и установим Recycler View для прогноза погоды
         initRecyclerView(view);
     }
@@ -128,12 +114,12 @@ public class FragmentMain extends AbstractFragment {
                 float lat = curWeather.getCoord().getLat();
                 float lon = curWeather.getCoord().getLon();
                 curTemp = floatTempToString(curWeather.getMain().getTemp());
-                curIcon = getBitmap(curWeather.getWeather()[0].getIcon());
+                curIcon = GetWeatherData.getBitmap(curWeather.getWeather()[0].getIcon());
                 curLink = generateLink(curCity);
 
                 // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
-                String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, lat, lon, BuildConfig.WEATHER_API_KEY);
-                WeatherOneCall weatherOneCall = (WeatherOneCall) GetWeatherData.getObjectFromGson(apiCall2, WeatherOneCall.class);
+//                String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, lat, lon, BuildConfig.WEATHER_API_KEY);
+                WeatherOneCall weatherOneCall = (WeatherOneCall) GetWeatherData.getData(lat, lon);
                 if (weatherOneCall != null) {
                     hourly = weatherOneCall.getHourly();
                     timezoneOffset = weatherOneCall.getTimezone_offset();
@@ -157,7 +143,7 @@ public class FragmentMain extends AbstractFragment {
                     for (String iName : imageNamesUnique) {
                         // качаем картинку в отдельном потоке
                         executorService.execute(() -> {
-                            Bitmap image = getBitmap(iName);
+                            Bitmap image = GetWeatherData.getBitmap(iName);
                             if (image != null) imagesUnique.put(iName, image);
                             countDownLatch.countDown();
                         });
@@ -212,66 +198,6 @@ public class FragmentMain extends AbstractFragment {
         return Uri.parse(YANDEX_POGODA_LINK + city);
     }
 
-    static Object getObjectFromGson(String apiCall, Class<? extends Object> objClass) {
-        HttpsURLConnection urlConnection = null;
-        try {
-            URL url = new URL(apiCall);
-            // 1) Открываем соединение
-            urlConnection = (HttpsURLConnection) url.openConnection();
-            // 2) Подготоваливаем запрос
-            // устанавливаем метод протокола - GET (получение данных)
-            urlConnection.setRequestMethod("GET");
-            // устанавливаем таймаут (ожидание не больше 10 сек)
-            urlConnection.setReadTimeout(10000);
-            // 3) Читаем данные в поток
-            BufferedReader inReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-            // сохраняем все данные в виде строки
-            String strData = getLines(inReader);
-            // преобразуем данные запроса в модель посредством библиотеки Gson
-            Gson gson = new Gson();
-            return gson.fromJson(strData, objClass);
-        } catch (IOException e) {
-            // TODO: возможно имеет смысл обработать разные ошибки отдельно
-            //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
-            e.printStackTrace();
-            // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-//            handler.post(() -> Toast.makeText(context, "Something went wrong...!", Toast.LENGTH_LONG).show());
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-        }
-        return null;
-    }
-
-    private static String getLines(BufferedReader in) {
-        // TODO: подробно изучить эту строку
-        return in.lines().collect(Collectors.joining("\n"));
-    }
-    private Bitmap getBitmap(String imageName) {
-        String apiCall = String.format("https://openweathermap.org/img/wn/%s@2x.png", imageName);
-
-        HttpsURLConnection urlConnection = null;
-        Bitmap image = null;
-        try {
-            URL url = new URL(apiCall);
-            urlConnection = (HttpsURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.setReadTimeout(10000);
-
-            InputStream in = urlConnection.getInputStream();
-            image = BitmapFactory.decodeStream(in);
-        } catch (IOException e) {
-            e.printStackTrace();
-            // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-            handler.post(() -> Toast.makeText(this.getContext(), "Something went wrong...!", Toast.LENGTH_LONG).show());
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-        }
-        return image;
-    }
     private String floatTempToString(float temp) {
         return String.format("%d°C", Math.round(temp));
     }
@@ -283,7 +209,6 @@ public class FragmentMain extends AbstractFragment {
 
     private void outputData(@NonNull ConstraintLayout view, String curCity) {
         // получим ссылки на элементы фрагмента
-        rvForecast = view.findViewById(R.id.rvForecast);
         temp = view.findViewById(R.id.tvTemp);
         sky = view.findViewById(R.id.ivIcon);
         details = view.findViewById(R.id.tvDetails);
@@ -317,21 +242,21 @@ public class FragmentMain extends AbstractFragment {
 
     private void initRecyclerView(View view) {
         // получаем RV
-        RecyclerView recyclerView = view.findViewById(R.id.rvForecast);
+        RecyclerView rvForecast = view.findViewById(R.id.rvForecast);
         // Эта установка служит для повышения производительности системы
         // (все элементы будут иметь одинаковый размер, и не надо его пересчитывать)
-        recyclerView.setHasFixedSize(true);
+        rvForecast.setHasFixedSize(true);
         // добавляем к RV менеджер макетов
         RecyclerView.LayoutManager linearLayout = new LinearLayoutManager(view.getContext(), LinearLayoutManager.HORIZONTAL, false);
-        recyclerView.setLayoutManager(linearLayout);
+        rvForecast.setLayoutManager(linearLayout);
         // добавляем к RV докоратор в виде сепаратора
         DividerItemDecoration divider = new DividerItemDecoration(context, LinearLayoutManager.HORIZONTAL);
         divider.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(application, R.drawable.separator)));
-        recyclerView.addItemDecoration(divider);
+        rvForecast.addItemDecoration(divider);
         // добавляем к RV адаптер
         AdapterWeather adapter = null;
         if(times != null)  adapter = new AdapterWeather(times, images, temps);
-        recyclerView.setAdapter(adapter);
+        rvForecast.setAdapter(adapter);
     }
 
 }
