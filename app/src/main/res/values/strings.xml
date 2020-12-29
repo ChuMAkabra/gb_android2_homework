@@ -20,4 +20,5 @@
     <string name="dark_theme">Dark Theme</string>
     <string name="not_found_title">Data wasn\'t found</string>
     <string name="city_not_found_msg">Please check city spelling</string>
+    <string name="forecast_not_found_msg">Forecast data is not available for the city</string>
 </resources>

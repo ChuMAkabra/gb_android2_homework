@@ -1,5 +1,6 @@
 package com.example.dzchumanov05;
 
+import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -26,8 +27,6 @@ public class GetUrlData {
             // TODO: возможно имеет смысл обработать разные ошибки отдельно
             //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
             e.printStackTrace();
-            // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-//            handler.post(() -> Toast.makeText(context, "Something went wrong...!", Toast.LENGTH_LONG).show());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -50,8 +49,6 @@ public class GetUrlData {
             // TODO: возможно имеет смысл обработать разные ошибки отдельно
             //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
             e.printStackTrace();
-            // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-//            handler.post(() -> Toast.makeText(context, "Something went wrong...!", Toast.LENGTH_LONG).show());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();

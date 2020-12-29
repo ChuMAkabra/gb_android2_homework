@@ -1,21 +1,16 @@
 package com.example.dzchumanov05;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -127,23 +122,13 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         }
         else {
             // иначе выведем диалоговое окно с причиной ошибки
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.not_found_title)
-                    .setMessage(R.string.city_not_found_msg)
-                    .setCancelable(true)
-                    .setIcon(R.mipmap.ic_launcher_round)
-                    .setPositiveButton("OK", (dialog, which) -> {
-                        // просто добавим кнопку ОК. По нажатии окно закроется
-                    })
-            ;
-            AlertDialog alert = builder.create();
-            alert.show();
+            showAlertDialog(this, R.string.not_found_title, R.string.city_not_found_msg, R.mipmap.ic_launcher_round, true);
         }
     }
     private void setSPCityName(String cityName) {
         sp.edit()
-                .putString(SP_LAST_CITY, cityName)
-                .apply();
+            .putString(SP_LAST_CITY, cityName)
+            .apply();
     }
     static String prepareCityName(String cityName) {
         // разделим название города на части (если > 2 слов), удалив лишние пробелы
@@ -166,7 +151,6 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     private static String capitalize(String word) {
         return String.format("%s%s", word.substring(0, 1).toUpperCase(), word.substring(1).toLowerCase());
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
@@ -265,7 +249,6 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
                 startActivity(intent);
                 break;
             case R.id.about:
-                // TODO: выводить фрагмент в диалоговое окно
                 new FragmentAbout().show(getSupportFragmentManager(), "about");
 //                getSupportFragmentManager()
 //                        .beginTransaction()
@@ -291,5 +274,16 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(PREVIOUS_ORIENTATION, getResources().getConfiguration().orientation);
+    }
+
+    public static void showAlertDialog(Context context, int titId, int msgId, int iconId, boolean cancelable) {
+        new android.app.AlertDialog.Builder(context)
+                .setTitle(titId)
+                .setMessage(msgId)
+                .setCancelable(cancelable)
+                .setIcon(iconId)
+                .setPositiveButton("OK", (dialog, which) -> {})
+                .create()
+                .show();
     }
 }

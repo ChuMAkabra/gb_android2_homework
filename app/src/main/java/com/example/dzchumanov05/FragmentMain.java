@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -162,8 +161,7 @@ public class FragmentMain extends AbstractFragment {
                     }
                 } else {
                     handler.post(() -> {
-                        // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-                        Toast.makeText(this.getContext(), "Oops, there is no data for the city...", Toast.LENGTH_SHORT).show();
+                        ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
                         // обнулим записанное ранее в аргументы фрагмента название города
                         // (это укажет на отсутствие прогноза для города в базе OneCall)
                         if (this.getArguments() != null) {
@@ -174,8 +172,7 @@ public class FragmentMain extends AbstractFragment {
             }
             else {
                 handler.post(() -> {
-                    // TODO: заменить тост на диалоговое окно (и описать это действие в одном месте)
-                    Toast.makeText(this.getContext(), "Oops, there is no such city...", Toast.LENGTH_SHORT).show();
+                    ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.forecast_not_found_msg, 0, true);
                     // обнулим записанное ранее в аргументы фрагмента название города
                     // (это укажет на отсутствие города в базе - вероятно допущена опечатка)
                     if (this.getArguments() != null) {
