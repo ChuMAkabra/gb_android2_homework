@@ -107,7 +107,7 @@ public class FragmentMain extends AbstractFragment {
 
     private void downloadData(String curCity) {
         handler  = new Handler(); // хендлер, указывающий на основной (UI) поток
-        Thread thread = new Thread(() -> {
+//        Thread thread = new Thread(() -> {
             curWeather = getCurWeather();
             if (curWeather != null) {
                 float lat = curWeather.getCoord().getLat();
@@ -180,14 +180,14 @@ public class FragmentMain extends AbstractFragment {
                     }
                 });
             }
-        });
-        thread.start();
-        try {
-            // вынудить главный поток ждать окончания выполнения данного потока
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        });
+//        thread.start();
+//        try {
+//            // вынудить главный поток ждать окончания выполнения данного потока
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private Uri generateLink(String city) {

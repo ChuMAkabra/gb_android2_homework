@@ -95,16 +95,16 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         String cityNameRes = prepareCityName(cityQuery);
 
         // получим данные о текущей погоде, если указанный город есть в базе
-        Thread thread = new Thread(() -> {
+//        Thread thread = new Thread(() -> {
            weatherRequest = FragmentMain.getCurrentWeather(cityNameRes);
-        });
+//        });
 
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        thread.start();
+//        try {
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         // если данные найдены, выведем их в новый фрагмент
         if (weatherRequest != null) {
