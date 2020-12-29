@@ -18,4 +18,6 @@
 
     <string name="app_icon_desc">Иконка приложения</string>
     <string name="dark_theme">Темная тема</string>
+    <string name="not_found_title">Данные не найдены</string>
+    <string name="city_not_found_msg">Пожалуйста проверьте корректность ввода города</string>
 </resources>

@@ -80,8 +80,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/flUpperFrame"
         app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintVertical_weight="0.45">
-<!--        tools:listitem="@layout/item_temp"-->
+        app:layout_constraintVertical_weight="0.45"
+        tools:listitem="@layout/item_tempstamp">
 
     </androidx.recyclerview.widget.RecyclerView>
 
