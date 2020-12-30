@@ -26,15 +26,8 @@ import com.example.dzchumanov05.model.WeatherRequest;
 
 import java.sql.Time;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class FragmentMain extends AbstractFragment {
     static final String CITY = "CITY";
@@ -47,7 +40,7 @@ public class FragmentMain extends AbstractFragment {
     private WeatherRequest curWeather;
     private String curCity;
     private String curTemp;
-    private Bitmap curIcon;
+    private String curIcon;
     private Uri curLink;
     private Hourly[] hourly;
     private long timezoneOffset;
@@ -59,6 +52,7 @@ public class FragmentMain extends AbstractFragment {
     ImageView sky;
     TextView details;
     TextView name;
+    private List<String> imageNamesAll;
 
     public static FragmentMain create(String cityName, WeatherRequest weatherRequest){
         FragmentMain fragment = new FragmentMain();
@@ -107,87 +101,78 @@ public class FragmentMain extends AbstractFragment {
 
     private void downloadData(String curCity) {
         handler  = new Handler(); // хендлер, указывающий на основной (UI) поток
-//        Thread thread = new Thread(() -> {
-            curWeather = getCurWeather();
-            if (curWeather != null) {
-                float lat = curWeather.getCoord().getLat();
-                float lon = curWeather.getCoord().getLon();
-                curTemp = floatTempToString(curWeather.getMain().getTemp());
-                curIcon = GetWeatherData.getBitmap(curWeather.getWeather()[0].getIcon());
-                curLink = generateLink(curCity);
+        curWeather = getCurWeather();
+        if (curWeather != null) {
+            float lat = curWeather.getCoord().getLat();
+            float lon = curWeather.getCoord().getLon();
+            curTemp = floatTempToString(curWeather.getMain().getTemp());
+            curIcon = curWeather.getWeather()[0].getIcon();
+            curLink = generateLink(curCity);
 
-                // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
+            // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
 //                String apiCall2 = String.format("%s/onecall?lat=%s&lon=%s&units=metric&exclude=minutely,daily,alerts&appid=%s", WEATHER_URL_DOMAIN, lat, lon, BuildConfig.WEATHER_API_KEY);
-                WeatherOneCall weatherOneCall = (WeatherOneCall) GetWeatherData.getData(lat, lon);
-                if (weatherOneCall != null) {
-                    hourly = weatherOneCall.getHourly();
-                    timezoneOffset = weatherOneCall.getTimezone_offset();
-                    images = new ArrayList<>();
+            WeatherOneCall weatherOneCall = (WeatherOneCall) GetWeatherData.getData(lat, lon);
+            if (weatherOneCall != null) {
+                hourly = weatherOneCall.getHourly();
+                timezoneOffset = weatherOneCall.getTimezone_offset();
+                images = new ArrayList<>();
 
-                    // запрос 3: по именам иконок загрузить их изображения с сервера
-                    // получаем лист имен всех иконок
-                    List<String> imageNamesAll = new ArrayList<>();
-                    for (Hourly hour : hourly) {
-                        imageNamesAll.add(hour.getWeather()[0].getIcon());
-                    }
-                    // получаем набор имен уникальных иконок
-                    Set<String> imageNamesUnique = new HashSet<>(imageNamesAll);
-                    // получаем хэш-таблицу уникальных битмапов
-                    Map<String, Bitmap> imagesUnique = new HashMap<>(imageNamesUnique.size());
-                    // устанавливаем обратный отчет потоков
-                    CountDownLatch countDownLatch = new CountDownLatch(imageNamesUnique.size());
-                    // создаем динамический пул потоков (скачать картинки в оптимальном кол-ве потоков)
-                    ExecutorService executorService = Executors.newCachedThreadPool();
-                    // для каждой уникальной картинки:
-                    for (String iName : imageNamesUnique) {
-                        // качаем картинку в отдельном потоке
-                        executorService.execute(() -> {
-                            Bitmap image = GetWeatherData.getBitmap(iName);
-                            if (image != null) imagesUnique.put(iName, image);
-                            countDownLatch.countDown();
-                        });
-                    }
-                    // дожидаемся завершения всех потоков
-                    try {
-                        countDownLatch.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    // закрываем пул потоков
-                    executorService.shutdown();
-                    // получаем лист всех битмапов (в правильном порядке!)
-                    for (String name : imageNamesAll) {
-                        images.add(imagesUnique.get(name));
-                    }
-                } else {
-                    handler.post(() -> {
-                        ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
-                        // обнулим записанное ранее в аргументы фрагмента название города
-                        // (это укажет на отсутствие прогноза для города в базе OneCall)
-                        if (this.getArguments() != null) {
-                            this.getArguments().putString(CITY, null);
-                        }
-                    });
+                // запрос 3: по именам иконок загрузить их изображения с сервера
+                // получаем лист имен всех иконок
+                imageNamesAll = new ArrayList<>();
+                for (Hourly hour : hourly) {
+                    imageNamesAll.add(hour.getWeather()[0].getIcon());
                 }
-            }
-            else {
+//                // получаем набор имен уникальных иконок
+//                Set<String> imageNamesUnique = new HashSet<>(imageNamesAll);
+//                // получаем хэш-таблицу уникальных битмапов
+//                Map<String, Bitmap> imagesUnique = new HashMap<>(imageNamesUnique.size());
+//                // устанавливаем обратный отчет потоков
+//                CountDownLatch countDownLatch = new CountDownLatch(imageNamesUnique.size());
+//                // создаем динамический пул потоков (скачать картинки в оптимальном кол-ве потоков)
+//                ExecutorService executorService = Executors.newCachedThreadPool();
+//                // для каждой уникальной картинки:
+//                for (String iName : imageNamesUnique) {
+//                    // качаем картинку в отдельном потоке
+//                    executorService.execute(() -> {
+//                        Bitmap image = GetWeatherData.getBitmap(iName);
+//                        if (image != null) imagesUnique.put(iName, image);
+//                        countDownLatch.countDown();
+//                    });
+//                }
+//                // дожидаемся завершения всех потоков
+//                try {
+//                    countDownLatch.await();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                // закрываем пул потоков
+//                executorService.shutdown();
+//                // получаем лист всех битмапов (в правильном порядке!)
+//                for (String name : imageNamesAll) {
+//                    images.add(imagesUnique.get(name));
+//                }
+            } else {
                 handler.post(() -> {
-                    ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.forecast_not_found_msg, 0, true);
+                    ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
                     // обнулим записанное ранее в аргументы фрагмента название города
-                    // (это укажет на отсутствие города в базе - вероятно допущена опечатка)
+                    // (это укажет на отсутствие прогноза для города в базе OneCall)
                     if (this.getArguments() != null) {
                         this.getArguments().putString(CITY, null);
                     }
                 });
             }
-//        });
-//        thread.start();
-//        try {
-//            // вынудить главный поток ждать окончания выполнения данного потока
-//            thread.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        }
+        else {
+            handler.post(() -> {
+                ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.forecast_not_found_msg, 0, true);
+                // обнулим записанное ранее в аргументы фрагмента название города
+                // (это укажет на отсутствие города в базе - вероятно допущена опечатка)
+                if (this.getArguments() != null) {
+                    this.getArguments().putString(CITY, null);
+                }
+            });
+        }
     }
 
     private Uri generateLink(String city) {
@@ -224,7 +209,8 @@ public class FragmentMain extends AbstractFragment {
             });
         }
         // установим текущую картинку
-        sky.setImageBitmap(curIcon);
+//        sky.setImageBitmap(curIcon);
+        GetWeatherData.loadIconIntoImageView(curIcon, sky);
 
         // заполним данные времени и температуры
         times = new ArrayList<>();
@@ -252,8 +238,7 @@ public class FragmentMain extends AbstractFragment {
         rvForecast.addItemDecoration(divider);
         // добавляем к RV адаптер
         AdapterWeather adapter = null;
-        if(times != null)  adapter = new AdapterWeather(times, images, temps);
+        if(times != null)  adapter = new AdapterWeather(times, imageNamesAll, temps);
         rvForecast.setAdapter(adapter);
     }
-
 }
