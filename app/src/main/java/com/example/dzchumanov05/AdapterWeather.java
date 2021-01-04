@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class AdapterWeather extends RecyclerView.Adapter<AdapterWeather.ViewHolder> {
+    //TODO: может все же заменить на один файл? Например List<String[]>?
     List<String> times;
     List<String> images;
     List<String> temps;

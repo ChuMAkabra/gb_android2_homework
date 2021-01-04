@@ -1,16 +1,24 @@
 package com.example.dzchumanov05.model;
 
+import com.google.gson.annotations.Expose;
+
 public class WeatherOneCall {
+    @Expose
     private float lat; // Geographical coordinates of the location (latitude)
+    @Expose
     private float lon; // Geographical coordinates of the location (longitude)
 //    timezone Timezone name for the requested location
+    @Expose
     private long timezone_offset; // Shift in seconds from UTC
+    @Expose
     private Current current; // Current weather data API response
 
 //    minutely Minute forecast weather data API response
 //        minutely.dt Time of the forecasted data, unix, UTC
 //        minutely.precipitation Precipitation volume, mm
+    @Expose
     private Hourly[] hourly; // Hourly forecast weather data API response
+    @Expose
     private Daily[] daily; // Daily forecast weather data API response
 
 //    private Alerts alerts; // Government weather alerts data from major national weather warning systems
