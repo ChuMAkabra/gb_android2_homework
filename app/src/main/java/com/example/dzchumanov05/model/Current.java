@@ -1,9 +1,13 @@
 package com.example.dzchumanov05.model;
 
+import com.google.gson.annotations.Expose;
+
 public class Current {
+    @Expose
     private long dt; // Current time, Unix, UTC
 //    sunrise Sunrise time, Unix, UTC
 //    sunset Sunset time, Unix, UTC
+    @Expose
     private float temp; // Temperature. Units - default: kelvin, metric: Celsius, imperial: Fahrenheit
 //    feels_like Temperature. This temperature parameter accounts for the human perception of weather. Units – default: kelvin, metric: Celsius, imperial: Fahrenheit.
 //    pressure Atmospheric pressure on the sea level, hPa
@@ -19,7 +23,8 @@ public class Current {
 //    rain.1h (where available) Rain volume for last hour, mm
 //    snow
 //    snow.1h (where available) Snow volume for last hour, mm
-private Weather[] weather;
+    @Expose
+    private Weather[] weather;
 
     public long getDt() {
         return dt;

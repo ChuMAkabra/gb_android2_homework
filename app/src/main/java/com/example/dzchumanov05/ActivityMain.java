@@ -19,6 +19,12 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.example.dzchumanov05.model.WeatherRequest;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.IOException;
+
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class ActivityMain extends AbstractActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawer;
     private NavigationView navView;
@@ -27,7 +33,9 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
     private SharedPreferences sp;
     private final String PREVIOUS_ORIENTATION = "PREVIOUS_ORIENTATION";
 
+    private static final String WEATHER_URL_BASE = "https://api.openweathermap.org/";
     private WeatherRequest weatherRequest;
+    public OpenWeather openWeather;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,17 +102,12 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         // дефисы на пробелы и добавляем заглавные буквы к каждой части названия)
         String cityNameRes = prepareCityName(cityQuery);
 
-        // получим данные о текущей погоде, если указанный город есть в базе
-//        Thread thread = new Thread(() -> {
-           weatherRequest = FragmentMain.getCurrentWeather(cityNameRes);
-//        });
+        // создаем файл, с помощью которого будем выполнять запросы к серверу
+        openWeather = getOpenWeather();
 
-//        thread.start();
-//        try {
-//            thread.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        // получим данные о текущей погоде, если указанный город есть в базе
+//           weatherRequest = FragmentMain.getCurrentWeather(cityNameRes);
+        getCurData(cityNameRes);
 
         // если данные найдены, выведем их в новый фрагмент
         if (weatherRequest != null) {
@@ -285,5 +288,57 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
                 .setPositiveButton("OK", (dialog, which) -> {})
                 .create()
                 .show();
+    }
+    private OpenWeather getOpenWeather() {
+        Retrofit retrofit = new Retrofit.Builder()
+                // базовая часть адреса
+                .baseUrl(WEATHER_URL_BASE)
+                // конвертер, необходимый для преобразования JSON в объекты
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        // возвращаем объект, при помощи которого будем выполнять запросы
+        return retrofit.create(OpenWeather.class);
+    }
+
+    void getCurData(String cityName) {
+//        Call <WeatherRequest> wrCall = openWeather.loadCurrentWeather(cityName, BuildConfig.WEATHER_API_KEY);
+
+        Thread thread = new Thread(()-> {
+            try {
+                Response<WeatherRequest> response = openWeather.loadCurrentWeather(cityName, BuildConfig.WEATHER_API_KEY).execute();
+                weatherRequest = response.body();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+//        openWeather
+//                .loadCurrentWeather(cityName, BuildConfig.WEATHER_API_KEY)
+//                .enqueue(new Callback<WeatherRequest>() {
+//            @Override
+//            public void onResponse(Call<WeatherRequest> call, Response<WeatherRequest> response) {
+//                if(response.body() != null) {
+//                    weatherRequest = response.body();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<WeatherRequest> call, Throwable t) {
+//                //TODO: запихнуть сюда алерт диалог!
+//                ActivityMain.showAlertDialog(getApplicationContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
+//                // обнулим записанное ранее в аргументы фрагмента название города
+//                // (это укажет на отсутствие прогноза для города в базе OneCall)
+////                if (getArguments() != null) {
+////                    getArguments().putString(CITY, null);
+////                }
+//            }
+//        });
+
     }
 }

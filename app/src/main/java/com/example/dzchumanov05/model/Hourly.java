@@ -1,7 +1,11 @@
 package com.example.dzchumanov05.model;
 
+import com.google.gson.annotations.Expose;
+
 public class Hourly {
+    @Expose
     private long dt; // Time of the forecasted data, Unix, UTC
+    @Expose
     private float temp; // Temperature. Units – default: kelvin, metric: Celsius, imperial: Fahrenheit. How to change units used
 //    feels_like Temperature. This accounts for the human perception of weather. Units – default: kelvin, metric: Celsius, imperial: Fahrenheit.
 //    pressure Atmospheric pressure on the sea level, hPa
@@ -17,6 +21,7 @@ public class Hourly {
 //    rain.1h (where available) Rain volume for last hour, mm
 //    snow
 //    snow.1h (where available) Snow volume for last hour, mm
+    @Expose
     private Weather[] weather;
 
     public long getDt() {

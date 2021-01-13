@@ -1,11 +1,9 @@
 package com.example.dzchumanov05;
 
-import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,11 +12,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class AdapterWeather extends RecyclerView.Adapter<AdapterWeather.ViewHolder> {
+    //TODO: может все же заменить на один файл? Например List<String[]>?
     List<String> times;
-    List<Bitmap> images;
+    List<String> images;
     List<String> temps;
 
-    public AdapterWeather(List<String> times, List<Bitmap> images, List<String> temps) {
+    public AdapterWeather(List<String> times, List<String> images, List<String> temps) {
         this.times = times;
         this.images = images;
         this.temps = temps;
@@ -57,9 +56,10 @@ public class AdapterWeather extends RecyclerView.Adapter<AdapterWeather.ViewHold
             this.tvTemp = itemView.findViewById(R.id.tvTemp);
         }
 
-        public void setData(String time, Bitmap image, String temp) {
+        public void setData(String time, String image, String temp) {
             tvTime.setText(time);
-            ivSky.setImageBitmap(image);
+//            ivSky.setImageBitmap(image);
+            GetWeatherData.loadIconIntoImageView(image, ivSky);
             tvTemp.setText(temp);
         }
     }

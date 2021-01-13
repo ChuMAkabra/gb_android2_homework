@@ -1,9 +1,5 @@
 package com.example.dzchumanov05;
 
-import android.app.AlertDialog;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,25 +11,25 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class GetUrlData {
 
-    Bitmap getBitmap(String apiCall) {
-        HttpsURLConnection urlConnection = null;
-        InputStream in;
-        Bitmap image = null;
-        try {
-            urlConnection = getConnection(apiCall);
-            in = urlConnection.getInputStream();
-            image = BitmapFactory.decodeStream(in);
-        } catch (IOException e) {
-            // TODO: возможно имеет смысл обработать разные ошибки отдельно
-            //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
-            e.printStackTrace();
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-        }
-        return image;
-    }
+//    Bitmap getBitmap(String apiCall) {
+//        HttpsURLConnection urlConnection = null;
+//        InputStream in;
+//        Bitmap image = null;
+//        try {
+//            urlConnection = getConnection(apiCall);
+//            in = urlConnection.getInputStream();
+//            image = BitmapFactory.decodeStream(in);
+//        } catch (IOException e) {
+//            // TODO: возможно имеет смысл обработать разные ошибки отдельно
+//            //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
+//            e.printStackTrace();
+//        } finally {
+//            if (urlConnection != null) {
+//                urlConnection.disconnect();
+//            }
+//        }
+//        return image;
+//    }
 
     String getData(String apiCall) {
         HttpsURLConnection urlConnection = null;

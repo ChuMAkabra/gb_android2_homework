@@ -1,9 +1,13 @@
 package com.example.dzchumanov05.model;
 
+import com.google.gson.annotations.Expose;
+
 public class Daily {
+    @Expose
     private long dt; // Time of the forecasted data, Unix, UTC
 //    sunrise Sunrise time, Unix, UTC
 //    sunset Sunset time, Unix, UTC
+    @Expose
     private float temp; // Units – default: kelvin, metric: Celsius, imperial: Fahrenheit
 //    temp.morn Morning temperature.
 //    temp.day Day temperature.
@@ -28,6 +32,7 @@ public class Daily {
 //    pop Probability of precipitation
 //rain (where available) Precipitation volume, mm
 //snow (where available) Snow volume, mm
+    @Expose
     private Weather[] weather;
 
     public long getDt() {

@@ -1,15 +1,25 @@
 package com.example.dzchumanov05.model;
 
+import com.google.gson.annotations.Expose;
+
 import java.io.Serializable;
 
 public class WeatherRequest implements Serializable {
+    @Expose
     private long dt;
+    @Expose
     private long timezone;
+    @Expose
     private Coord coord;
+    @Expose
     private Weather[] weather;
+    @Expose
     private Main main;
+    @Expose
     private Wind wind;
+    @Expose
     private Clouds clouds;
+    @Expose
     private String name;
 
     public Coord getCoord() {
