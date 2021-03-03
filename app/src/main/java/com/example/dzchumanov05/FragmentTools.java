@@ -14,6 +14,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+// TODO: программа падает при смене темы с помощью этого фрагмента! Разберись!
 public class FragmentTools extends BottomSheetDialogFragment {
     private SwitchCompat swDarkTheme;
 

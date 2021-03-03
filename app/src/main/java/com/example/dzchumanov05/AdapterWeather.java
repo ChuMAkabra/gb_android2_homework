@@ -58,8 +58,8 @@ public class AdapterWeather extends RecyclerView.Adapter<AdapterWeather.ViewHold
 
         public void setData(String time, String image, String temp) {
             tvTime.setText(time);
-//            ivSky.setImageBitmap(image);
-            GetWeatherData.loadIconIntoImageView(image, ivSky);
+            // установим картинку (с помощью библиотеки Picasso)
+            GetWeatherIcon.loadIconIntoImageView(image, ivSky);
             tvTemp.setText(temp);
         }
     }

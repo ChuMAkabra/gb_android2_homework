@@ -23,6 +23,7 @@ import com.example.dzchumanov05.model.WeatherOneCall;
 import com.example.dzchumanov05.model.WeatherRequest;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,12 +40,14 @@ public class FragmentMain extends AbstractFragment {
     public static final String YANDEX_POGODA_LINK = "https://yandex.ru/pogoda/";
     private WeatherRequest curWeather;
     private String curCity;
+    private String curDate;
+    private String curTime;
     private String curTemp;
     private String curIcon;
     private Uri curLink;
     private Hourly[] hourly;
     private long timezoneOffset;
-//    private List<Bitmap> images;
+    private List<String> dates;
     private List<String> times;
     private List<String> temps;
 
@@ -65,11 +68,11 @@ public class FragmentMain extends AbstractFragment {
         return fragment;
     }
 
-    static WeatherRequest getCurrentWeather(String cityName) {
-        // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
-        // TODO: заменить на Retrofit
-        return (WeatherRequest) GetWeatherData.getData(cityName);
-    }
+//    @Deprecated
+//    static WeatherRequest getCurrentWeather(String cityName) {
+//        // запрос 1: через Current Weather Api получить координаты, текущие температуру и иконку погоды выбранного города
+//        return (WeatherRequest) GetWeatherData.getData(cityName);
+//    }
 
     public String getCurCity() {
         return (getArguments() != null) ? getArguments().getString(CITY) : null;
@@ -105,41 +108,26 @@ public class FragmentMain extends AbstractFragment {
         if (curWeather != null) {
             float lat = curWeather.getCoord().getLat();
             float lon = curWeather.getCoord().getLon();
+            long dateTime = curWeather.getDt();
+            timezoneOffset =  curWeather.getTimezone();
+            // записать текущие время и дату (для записи в базу данных)
+            curDate = getDate(dateTime, timezoneOffset).toString();
+            curTime = getTime(dateTime, timezoneOffset).toString();
+            // записать текущие температуру, иконку погоды и ссылку (в т.ч. для вывода на экран)
             curTemp = floatTempToString(curWeather.getMain().getTemp());
             curIcon = curWeather.getWeather()[0].getIcon();
             curLink = generateLink(curCity);
 
             // запрос 2: через One Call Api по координатам получить почасовой прогноз погоды на 2 дня вперед и имена иконок погоды
-            // TODO: заменить на Retrofit
             getForecast(lat, lon);
             if(hourly != null) {
-//            WeatherOneCall weatherOneCall = (WeatherOneCall) GetWeatherData.getData(lat, lon);
-//            if (weatherOneCall != null) {
-//                hourly = weatherOneCall.getHourly();
-//                timezoneOffset = weatherOneCall.getTimezone_offset();
-
                 // запрос 3: по именам иконок загрузить их изображения с сервера
                 // получаем лист имен всех иконок
                 imageNamesAll = new ArrayList<>();
                 for (Hourly hour : hourly) {
                     imageNamesAll.add(hour.getWeather()[0].getIcon());
                 }
-            } else {
-//                ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
-//                // обнулим записанное ранее в аргументы фрагмента название города
-//                // (это укажет на отсутствие прогноза для города в базе OneCall)
-//                if (this.getArguments() != null) {
-//                    this.getArguments().putString(CITY, null);
-//                }
             }
-        }
-        else {
-//            ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.forecast_not_found_msg, 0, true);
-//            // обнулим записанное ранее в аргументы фрагмента название города
-//            // (это укажет на отсутствие города в базе - вероятно допущена опечатка)
-//            if (this.getArguments() != null) {
-//                this.getArguments().putString(CITY, null);
-//            }
         }
     }
 
@@ -150,7 +138,6 @@ public class FragmentMain extends AbstractFragment {
             if (response != null) {
                 WeatherOneCall weatherOneCall = response.body();
                 hourly =  weatherOneCall.getHourly();
-                timezoneOffset =  weatherOneCall.getTimezone_offset();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -168,26 +155,6 @@ public class FragmentMain extends AbstractFragment {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-//        openWeather.loadForecast(lat, lon, "metric", BuildConfig.WEATHER_API_KEY).enqueue(new Callback<WeatherOneCall>() {
-//            @Override
-//            public void onResponse(Call<WeatherOneCall> call, Response<WeatherOneCall> response) {
-//                if(response.body() != null) {
-//                    hourly = response.body().getHourly();
-//                    timezoneOffset = response.body().getTimezone_offset();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<WeatherOneCall> call, Throwable t) {
-//                //TODO: запихнуть сюда алерт диалог!
-//                ActivityMain.showAlertDialog(getContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
-//                // обнулим записанное ранее в аргументы фрагмента название города
-//                // (это укажет на отсутствие прогноза для города в базе OneCall)
-//                if (getArguments() != null) {
-//                    getArguments().putString(CITY, null);
-//                }
-//            }
-//        });
     }
 
 
@@ -199,10 +166,16 @@ public class FragmentMain extends AbstractFragment {
     private String floatTempToString(float temp) {
         return String.format("%d°C", Math.round(temp));
     }
-    private String timeToString(Time t3) {
+    private String timeToString(Time time) {
         // не отображаем секунды
-        String[] strSplit = t3.toString().split(":");
+        String[] strSplit = time.toString().split(":");
         return String.format("%s:%s", strSplit[0], strSplit[1]);
+    }
+
+    private String dateToString(Date date) {
+        // не отображаем год
+        String[] strSplit = date.toString().split("-");
+        return String.format("%s.%s", strSplit[1], strSplit[2]);
     }
 
     private void outputData(@NonNull ConstraintLayout view, String curCity) {
@@ -224,19 +197,30 @@ public class FragmentMain extends AbstractFragment {
                 startActivity(intent);
             });
         }
-        // установим текущую картинку
-//        sky.setImageBitmap(curIcon);
-        GetWeatherData.loadIconIntoImageView(curIcon, sky);
+        // установим текущую картинку (с помощью библиотеки Picasso)
+        GetWeatherIcon.loadIconIntoImageView(curIcon, sky);
 
         // заполним данные времени и температуры
+        dates = new ArrayList<>();
         times = new ArrayList<>();
         temps = new ArrayList<>();
         for (Hourly h : hourly) {
-            // в API время в секундах, а Time() требует милисекунды
-            Time time = new Time((h.getDt() + timezoneOffset) * 1000);
+            Date date = getDate(h.getDt(), timezoneOffset);
+            Time time = getTime(h.getDt(), timezoneOffset);
+            dates.add(dateToString(date));
             times.add(timeToString(time));
             temps.add(floatTempToString(h.getTemp()));
         }
+    }
+
+    private Time getTime(long dt, long tzOffset) {
+        // в API время в секундах, а Time() требует милисекунды
+        return new Time((dt + tzOffset) * 1000);
+    }
+
+    private Date getDate(long dt, long tzOffset) {
+        // в API время в секундах, а Date() требует милисекунды
+        return new Date((dt + tzOffset) * 1000);
     }
 
     private void initRecyclerView(View view) {

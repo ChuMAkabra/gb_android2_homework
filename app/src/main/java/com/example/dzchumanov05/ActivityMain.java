@@ -317,28 +317,5 @@ public class ActivityMain extends AbstractActivity implements NavigationView.OnN
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-//        openWeather
-//                .loadCurrentWeather(cityName, BuildConfig.WEATHER_API_KEY)
-//                .enqueue(new Callback<WeatherRequest>() {
-//            @Override
-//            public void onResponse(Call<WeatherRequest> call, Response<WeatherRequest> response) {
-//                if(response.body() != null) {
-//                    weatherRequest = response.body();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<WeatherRequest> call, Throwable t) {
-//                //TODO: запихнуть сюда алерт диалог!
-//                ActivityMain.showAlertDialog(getApplicationContext(), R.string.not_found_title, R.string.city_not_found_msg, 0, true);
-//                // обнулим записанное ранее в аргументы фрагмента название города
-//                // (это укажет на отсутствие прогноза для города в базе OneCall)
-////                if (getArguments() != null) {
-////                    getArguments().putString(CITY, null);
-////                }
-//            }
-//        });
-
     }
 }

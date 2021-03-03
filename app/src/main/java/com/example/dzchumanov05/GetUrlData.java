@@ -9,27 +9,8 @@ import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
 
+@Deprecated
 public class GetUrlData {
-
-//    Bitmap getBitmap(String apiCall) {
-//        HttpsURLConnection urlConnection = null;
-//        InputStream in;
-//        Bitmap image = null;
-//        try {
-//            urlConnection = getConnection(apiCall);
-//            in = urlConnection.getInputStream();
-//            image = BitmapFactory.decodeStream(in);
-//        } catch (IOException e) {
-//            // TODO: возможно имеет смысл обработать разные ошибки отдельно
-//            //  (MalformedURLException, ProtocolException, IOException), но для отладки (не для пользователя)
-//            e.printStackTrace();
-//        } finally {
-//            if (urlConnection != null) {
-//                urlConnection.disconnect();
-//            }
-//        }
-//        return image;
-//    }
 
     String getData(String apiCall) {
         HttpsURLConnection urlConnection = null;
